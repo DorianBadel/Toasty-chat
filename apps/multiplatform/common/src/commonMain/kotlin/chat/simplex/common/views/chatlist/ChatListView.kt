@@ -38,6 +38,7 @@ import chat.simplex.common.model.ChatController.stopRemoteHostAndReloadHosts
 import chat.simplex.common.ui.theme.*
 import chat.simplex.common.views.helpers.*
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.views.call.Call
 import chat.simplex.common.views.chat.item.*
 import chat.simplex.common.views.chat.topPaddingToContent
@@ -752,6 +753,7 @@ private fun ChatListSearchBar(listState: LazyListState, searchText: MutableState
   Box {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
       val focusRequester = remember { FocusRequester() }
+      if (Toasty.enabled) ToastyChatList.searchFocus = focusRequester
       var focused by remember { mutableStateOf(false) }
       Icon(
         painterResource(MR.images.ic_search),
@@ -826,7 +828,8 @@ private fun ChatListSearchBar(listState: LazyListState, searchText: MutableState
                 if (ids.size == targets.size) connectNameCandidate.value = null
               } else if (!searchShowingSimplexLink.value || it.isEmpty()) {
                 if (it.isNotEmpty()) {
-                  focusRequester.requestFocus()
+                  // Toasty sets the text from the vim `/` line; focusing the field would swallow the next keys
+                  if (!Toasty.enabled) focusRequester.requestFocus()
                 } else {
                   if (!chatModel.appOpenUrlConnecting.value) {
                     connectProgressManager.cancelConnectProgress()
@@ -947,6 +950,10 @@ private fun BoxScope.ChatList(searchText: MutableState<TextFieldValue>, listStat
   val searchChatFilteredBySimplexLink = remember { mutableStateOf<Set<String>>(emptySet()) }
   val connectNameCandidate = remember { mutableStateOf<String?>(null) }
   val chats = filteredChats(searchShowingSimplexLink, searchChatFilteredBySimplexLink, searchText.value.text, allChats.value.toList(), activeFilter.value)
+  if (Toasty.enabled) {
+    val headerItems = 2 + (if (!oneHandUICardShown.value) 1 else 0) + (if (crowdfunding && !getStakeBannerDismissed.value) 1 else 0)
+    ToastyChatList.update(chats, listState, headerItems, reversed = oneHandUI.value, searchText)
+  }
   val topPaddingToContent = topPaddingToContent(false)
   val blankSpaceSize = if (oneHandUI.value) WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + AppBarHeight * fontSizeSqrtMultiplier else topPaddingToContent
   LazyColumnWithScrollBar(
@@ -1019,7 +1026,9 @@ private fun BoxScope.ChatList(searchText: MutableState<TextFieldValue>, listStat
       val nextChatSelected = remember(chat.id, chats) { derivedStateOf {
         chatModel.chatId.value != null && chats.getOrNull(index + 1)?.id == chatModel.chatId.value
       } }
-      ChatListNavLinkView(chat, nextChatSelected)
+      Box(Modifier.toastyChatCursor(chat.id)) {
+        ChatListNavLinkView(chat, nextChatSelected)
+      }
     }
     if (!addressCreationCardShown.value) {
       item {
@@ -1469,6 +1478,7 @@ fun filteredChats(
     chats.filter { it.id in linkChatIds }
   } else {
     val s = if (searchShowingSimplexLink.value) "" else searchText.trim().lowercase()
+    if (Toasty.enabled && s.isNotEmpty()) return toastyFilterChats(chats, s)
     if (s.isEmpty())
       chats.filter { chat -> chat.id == chatModel.chatId.value || (!chat.chatInfo.chatDeleted && !chat.chatInfo.contactCard && filtered(chat, activeFilter)) }
     else {

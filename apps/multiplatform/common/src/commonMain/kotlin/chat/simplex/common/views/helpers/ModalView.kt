@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import chat.simplex.common.model.ChatController.appPrefs
 import chat.simplex.common.model.ChatModel
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import LocalCardScreen
 import chat.simplex.common.ui.theme.*
 import chat.simplex.common.views.chatlist.StatusBarBackground
@@ -144,7 +145,7 @@ class ModalManager(private val placement: ModalPlacement? = null) {
 
     if (placement == ModalPlacement.CENTER) {
       ChatModel.chatId.value = null
-    } else if (placement == ModalPlacement.END) {
+    } else if (placement == ModalPlacement.END && !Toasty.enabled) {
       desktopExpandWindowToWidth(DEFAULT_START_MODAL_WIDTH * sqrt(appPrefs.fontScale.get()) + DEFAULT_MIN_CENTER_MODAL_WIDTH + DEFAULT_END_MODAL_WIDTH * sqrt(appPrefs.fontScale.get()))
     }
   }

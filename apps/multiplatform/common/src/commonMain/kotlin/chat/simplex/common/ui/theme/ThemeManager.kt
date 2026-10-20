@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontFamily
 import chat.simplex.common.model.*
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.views.helpers.*
 import java.io.File
 
@@ -56,6 +57,7 @@ object ThemeManager {
   // Spec: spec/services/theme.md#currentColors
   fun currentColors(themeOverridesForType: WallpaperType?, perChatTheme: ThemeModeOverride?, perUserTheme: ThemeModeOverrides?, appSettingsTheme: List<ThemeOverrides>): ActiveTheme {
     val themeName = appPrefs.currentTheme.get()!!
+    if (Toasty.enabled) return toastyActiveTheme(themeName)
     val nonSystemThemeName = nonSystemThemeName()
     val defaultTheme = defaultActiveTheme(appSettingsTheme)
 

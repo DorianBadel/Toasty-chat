@@ -3,9 +3,11 @@ package chat.simplex.common.ui.theme
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.platform.Font
 import chat.simplex.common.platform.desktopPlatform
+import chat.simplex.common.toasty.*
 import chat.simplex.res.MR
 
-actual val Inter: FontFamily = FontFamily(
+// Toasty: views that name Inter directly get the monospace font too
+actual val Inter: FontFamily = if (Toasty.enabled) ToastyMono else FontFamily(
   Font(MR.fonts.Inter.regular.file),
   Font(MR.fonts.Inter.italic.file, style = FontStyle.Italic),
   Font(MR.fonts.Inter.bold.file, FontWeight.Bold),

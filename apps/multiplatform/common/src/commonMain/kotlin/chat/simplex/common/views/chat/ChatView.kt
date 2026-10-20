@@ -41,6 +41,7 @@ import chat.simplex.common.views.chatlist.*
 import chat.simplex.common.views.helpers.*
 import chat.simplex.common.model.GroupInfo
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.platform.AudioPlayer
 import chat.simplex.common.views.newchat.ContactConnectionInfoView
 import chat.simplex.common.views.newchat.alertProfileImageSize
@@ -272,6 +273,18 @@ fun ChatView(
             withBGApi {
               apiFindMessages(chatsCtx, c, contentFilter.value?.contentTag, value)
               searchText.value = value
+            }
+          }
+          if (Toasty.enabled && chatsCtx.secondaryContextFilter == null) {
+            // the vim `/` line searches without opening the search toolbar, so skip its closed-search check
+            ToastyChat.searchValue = searchText
+            ToastyChat.search = search@{ value ->
+              val c = chatModel.getChat(chatInfo.id)
+              if (searchText.value == value || c == null || chatModel.chatId.value != chatInfo.id) return@search
+              withBGApi {
+                apiFindMessages(chatsCtx, c, contentFilter.value?.contentTag, value)
+                searchText.value = value
+              }
             }
           }
           ChatLayout(
@@ -990,6 +1003,7 @@ fun ChatLayout(
         val oneHandUI = remember { appPrefs.oneHandUI.state }
         val chatBottomBar = remember { appPrefs.chatBottomBar.state }
         val composeViewFocusRequester = remember { if (appPlatform.isDesktop) FocusRequester() else null }
+        if (Toasty.enabled) ToastyChat.composeFocus = composeViewFocusRequester
         AdaptingBottomPaddingLayout(Modifier, CHAT_COMPOSE_LAYOUT_ID, composeViewHeight) {
           if (chat != null) {
             val selectionManager = LocalSelectionManager.current
@@ -1880,6 +1894,14 @@ fun BoxScope.ChatItemsList(
     scrollToItem(chatsCtx, remoteHostIdUpdated, searchValue, contentFilter, loadingMoreItems, animatedScrollingInProgress, highlightedItems, chatInfoUpdated, maxHeight, scope, reversedChatItems, mergedItems, listState, loadMessages)
   }
   val scrollToQuotedItemFromItem: (Long) -> Unit = remember { findQuotedItemFromItem(chatsCtx, remoteHostIdUpdated, chatInfoUpdated, scope, scrollToItem, scrollToItemId) }
+  if (Toasty.enabled && chatsCtx.secondaryContextFilter == null) {
+    val pinned = remember { derivedStateOf { pinnedIds(reversedChatItems.value) } }
+    ToastyChat.handle = ToastyChatHandle(
+      chatInfo, composeState, selectedChatItems, reversedChatItems, listState, { mergedItems.value.indexInParentItems[it] },
+      topPaddingPx = topPaddingToContentPx.value, bottomPaddingPx = with(LocalDensity.current) { composeViewHeight.value.roundToPx() },
+      useLinkPreviews, deleteMessage, deleteMessages, setReaction, showChatInfo, pinned
+    )
+  }
   if (chatsCtx.secondaryContextFilter == null) {
     LaunchedEffect(Unit) {
       snapshotFlow { scrollToItemId.value }.filterNotNull().collect {
@@ -1947,7 +1969,10 @@ fun BoxScope.ChatItemsList(
                 highlightedItems.value = setOf()
               }
           }
+          Box(Modifier.toastyItemCursor(cItem.id)) {
           ChatItemView(chatsCtx, remoteHostId, chat, cItem, composeState, provider, useLinkPreviews = useLinkPreviews, linkMode = linkMode, revealed = revealed, highlighted = highlighted, hoveredItemId = hoveredItemId, range = range, searchIsNotBlank = searchValueIsNotBlank, fillMaxWidth = fillMaxWidth, selectedChatItems = selectedChatItems, selectChatItem = { selectUnselectChatItem(true, cItem, revealed, selectedChatItems, reversedChatItems) }, deleteMessage = deleteMessage, deleteMessages = deleteMessages, archiveReports = archiveReports, receiveFile = receiveFile, cancelFile = cancelFile, joinGroup = joinGroup, acceptCall = acceptCall, acceptFeature = acceptFeature, openDirectChat = openDirectChat, forwardItem = forwardItem, updateContactStats = updateContactStats, updateMemberStats = updateMemberStats, syncContactConnection = syncContactConnection, syncMemberConnection = syncMemberConnection, findModelChat = findModelChat, findModelMember = findModelMember, scrollToItem = scrollToItem, scrollToItemId = scrollToItemId, scrollToQuotedItemFromItem = scrollToQuotedItemFromItem, setReaction = setReaction, showItemDetails = showItemDetails, reveal = reveal, showMemberInfo = showMemberInfo, showChatInfo = showChatInfo, developerTools = developerTools, showViaProxy = showViaProxy, itemSeparation = itemSeparation, showTimestamp = itemSeparation.timestamp, swipeOffset = swipeOffset)
+          ToastyPinBadge(cItem)
+          }
         }
       }
 

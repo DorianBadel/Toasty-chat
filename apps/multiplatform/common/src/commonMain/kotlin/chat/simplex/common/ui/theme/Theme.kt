@@ -18,6 +18,7 @@ import chat.simplex.common.views.helpers.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import chat.simplex.common.toasty.*
 import chat.simplex.res.MR
 import kotlinx.serialization.Transient
 import java.util.UUID
@@ -825,8 +826,8 @@ fun SimpleXTheme(darkTheme: Boolean? = null, content: @Composable () -> Unit) {
   }
   MaterialTheme(
     colors = theme.colors,
-    typography = Typography,
-    shapes = Shapes,
+    typography = if (Toasty.enabled) ToastyTypography else Typography,
+    shapes = if (Toasty.enabled) ToastyShapes else Shapes,
     content = {
       val density = Density(LocalDensity.current.density * desktopDensityScaleMultiplier, LocalDensity.current.fontScale * fontSizeMultiplier)
       val rememberedAppColors = remember {
@@ -854,8 +855,8 @@ fun SimpleXTheme(darkTheme: Boolean? = null, content: @Composable () -> Unit) {
 fun SimpleXThemeOverride(theme: ThemeManager.ActiveTheme, content: @Composable () -> Unit) {
   MaterialTheme(
     colors = theme.colors,
-    typography = Typography,
-    shapes = Shapes,
+    typography = if (Toasty.enabled) ToastyTypography else Typography,
+    shapes = if (Toasty.enabled) ToastyShapes else Shapes,
     content = {
       val rememberedAppColors = remember {
         // Explicitly creating a new object here so we don't mutate the initial [appColors]

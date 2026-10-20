@@ -22,6 +22,7 @@ import chat.simplex.common.views.usersettings.SetDeliveryReceiptsView
 import chat.simplex.common.model.*
 import chat.simplex.common.model.ChatController.appPrefs
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.ui.theme.*
 import chat.simplex.common.views.CreateFirstProfile
 import chat.simplex.common.views.helpers.SimpleButton
@@ -424,6 +425,7 @@ fun EndPartOfScreen() {
 // Spec: spec/client/navigation.md#DesktopScreen
 @Composable
 fun DesktopScreen(userPickerState: MutableStateFlow<AnimatedViewState>) {
+  if (Toasty.enabled) return ToastyDesktopScreen(userPickerState)
   Box(Modifier.width(DEFAULT_START_MODAL_WIDTH * fontSizeSqrtMultiplier)) {
     StartPartOfScreen(userPickerState)
     tryOrShowError("UserPicker", error = {}) {
@@ -463,7 +465,7 @@ fun DesktopScreen(userPickerState: MutableStateFlow<AnimatedViewState>) {
 }
 
 @Composable
-private fun SwitchingUsersView() {
+internal fun SwitchingUsersView() {
   if (remember { chatModel.switchingUsersAndHosts }.value) {
     Box(
       Modifier.fillMaxSize().clickable(enabled = false, onClick = {}),

@@ -30,6 +30,7 @@ import chat.simplex.common.model.*
 import chat.simplex.common.model.ChatModel.controller
 import chat.simplex.common.model.ChatModel.currentUser
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.ui.theme.*
 import chat.simplex.common.views.chat.*
 import chat.simplex.common.views.chatlist.openChat
@@ -1313,7 +1314,8 @@ sealed class ShapeStyle {
 }
 
 val shapeStyle: (chatItem: ChatItem?, tailEnabled: Boolean, tailVisible: Boolean, revealed: Boolean) -> ShapeStyle =
-  if (appPlatform.isDesktop || (platform.androidApiLevel ?: 0) > 27) ::shapeStyleWithTail
+  if (Toasty.enabled) { _, _, _, _ -> ShapeStyle.RoundRect(0.dp) }
+  else if (appPlatform.isDesktop || (platform.androidApiLevel ?: 0) > 27) ::shapeStyleWithTail
   else { _, _, _, _ -> ShapeStyle.RoundRect(msgRectMaxRadius) }
 
 fun shapeStyleWithTail(chatItem: ChatItem? = null, tailEnabled: Boolean, tailVisible: Boolean, revealed: Boolean): ShapeStyle {

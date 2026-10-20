@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import chat.simplex.common.model.*
 import chat.simplex.common.model.ChatModel.controller
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.*
 import chat.simplex.common.ui.theme.*
 import chat.simplex.common.views.chat.*
 import chat.simplex.common.views.chat.group.*
@@ -216,6 +217,7 @@ suspend fun openChat(
   apiId: Long,
   openAroundItemId: Long? = null
 ) {
+  if (Toasty.enabled && secondaryChatsCtx == null) ToastyNav.activate(ToastyNav.CHAT)
   if (secondaryChatsCtx != null) {
     chatModel.secondaryChatsContext.value = secondaryChatsCtx
   }

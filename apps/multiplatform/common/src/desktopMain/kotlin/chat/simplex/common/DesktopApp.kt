@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import chat.simplex.common.model.*
 import chat.simplex.common.platform.*
+import chat.simplex.common.toasty.ToastyDevHook
+import chat.simplex.common.toasty.ToastyNav
+import chat.simplex.common.toasty.ToastyTextInputTracker
 import chat.simplex.common.ui.theme.DEFAULT_START_MODAL_WIDTH
 import chat.simplex.common.ui.theme.SimpleXTheme
 import chat.simplex.common.views.TerminalView
@@ -122,7 +125,7 @@ private fun ApplicationScope.AppWindow(closedByError: MutableState<Boolean>) {
   simplexWindowState.windowState = windowState
   // Reload all strings in all @Composable's after language change at runtime
   if (remember { ChatController.appPrefs.appLanguage.state }.value != "") {
-    Window(state = windowState, visible = simplexWindowState.windowVisible.value, icon = painterResource(MR.images.ic_simplex), onCloseRequest = { handleCloseRequest(closedByError) }, onKeyEvent = {
+    Window(state = windowState, visible = simplexWindowState.windowVisible.value, icon = painterResource(MR.images.ic_simplex), onCloseRequest = { handleCloseRequest(closedByError) }, onPreviewKeyEvent = ToastyNav::onKeyEvent, onKeyEvent = {
       if (it.key == Key.Escape && it.type == KeyEventType.KeyUp) {
         simplexWindowState.backstack.lastOrNull()?.invoke() != null
       } else {
@@ -131,7 +134,8 @@ private fun ApplicationScope.AppWindow(closedByError: MutableState<Boolean>) {
     }, title = "SimpleX") {
 //      val hardwareAccelerationDisabled = remember { listOf(GraphicsApi.SOFTWARE_FAST, GraphicsApi.SOFTWARE_COMPAT, GraphicsApi.UNKNOWN).contains(window.renderApi) }
       simplexWindowState.window = window
-      AppScreen()
+      ToastyDevHook.attach(window)
+      ToastyTextInputTracker { AppScreen() }
       if (simplexWindowState.openDialog.isAwaiting) {
         FileDialogChooser(
           title = "SimpleX",
